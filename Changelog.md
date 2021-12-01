@@ -1,6 +1,7 @@
 ### 0.8.16 (unreleased)
 
 Language Features:
+ * Allow user-defined operators via ``using {f as +} for Typename;``.
 
 
 Compiler Features:
