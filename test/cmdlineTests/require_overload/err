@@ -1,4 +1,4 @@
-Error: No matching declaration found after argument-dependent lookup.
+TypeError: No matching declaration found after argument-dependent lookup.
  --> require_overload/input.sol:5:9:
   |
 5 |         require(this);

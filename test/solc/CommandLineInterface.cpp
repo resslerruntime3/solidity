@@ -1312,7 +1312,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_ambiguous_import)
 	};
 
 	string expectedMessage =
-		"Error: Source \"contract.sol\" not found: Ambiguous import. "
+		"ParserError: Source \"contract.sol\" not found: Ambiguous import. "
 		"Multiple matching files found inside base path and/or include paths: \"" +
 		(expectedWorkDir / "base/contract.sol").generic_string() + "\", \"" +
 		(expectedWorkDir / "include/contract.sol").generic_string() + "\".\n"

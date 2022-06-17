@@ -31,6 +31,7 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/facilities/overload.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 
 #include <string>
 #include <utility>
@@ -174,6 +175,15 @@ public:
 		ParserError,
 		TypeError,
 		SyntaxError,
+		IOError,
+		FatalError,
+		JSONError,
+		InternalCompilerError,
+		CompilerError,
+		Exception,
+		UnimplementedFeatureError,
+		YulException,
+		SMTLogicException,
 		Warning,
 		Info
 	};
@@ -195,7 +205,6 @@ public:
 
 	ErrorId errorId() const { return m_errorId; }
 	Type type() const { return m_type; }
-	std::string const& typeName() const { return m_typeName; }
 
 	SourceLocation const* sourceLocation() const noexcept;
 	SecondarySourceLocation const* secondarySourceLocation() const noexcept;
@@ -238,27 +247,65 @@ public:
 
 	static std::string formatErrorSeverity(Severity _severity)
 	{
-		if (_severity == Severity::Info)
+		switch (_severity)
+		{
+		case Severity::Info:
 			return "Info";
-		if (_severity == Severity::Warning)
+		case Severity::Warning:
 			return "Warning";
-		solAssert(isError(_severity), "");
-		return "Error";
+		default:
+			solAssert(isError(_severity));
+			return "Error";
+		}
+	}
+
+	static std::string formatErrorType(Type _type)
+	{
+		switch (_type)
+		{
+		case Type::IOError:
+			return "IOError";
+		case Type::FatalError:
+			return "FatalError";
+		case Type::JSONError:
+			return "JSONError";
+		case Type::InternalCompilerError:
+			return "InternalCompilerError";
+		case Type::CompilerError:
+			return "CompilerError";
+		case Type::Exception:
+			return "Exception";
+		case Type::CodeGenerationError:
+			return "CodeGenerationError";
+		case Type::DeclarationError:
+			return "DeclarationError";
+		case Type::DocstringParsingError:
+			return "DocstringParsingError";
+		case Type::Info:
+			return "Info";
+		case Type::ParserError:
+			return "ParserError";
+		case Type::SyntaxError:
+			return "SyntaxError";
+		case Type::TypeError:
+			return "TypeError";
+		case Type::UnimplementedFeatureError:
+			return "UnimplementedFeatureError";
+		case Type::YulException:
+			return "YulException";
+		case Type::SMTLogicException:
+			return "SMTLogicException";
+		default:
+			solAssert(_type == Type::Warning);
+			return "Warning";
+		}
 	}
 
 	static std::string formatErrorSeverityLowercase(Severity _severity)
 	{
-		switch (_severity)
-		{
-		case Severity::Info:
-			return "info";
-		case Severity::Warning:
-			return "warning";
-		case Severity::Error:
-			solAssert(isError(_severity), "");
-			return "error";
-		}
-		solAssert(false, "");
+		std::string severityValue = formatErrorSeverity(_severity);
+		boost::algorithm::to_lower(severityValue);
+		return severityValue;
 	}
 
 	static std::optional<Severity> severityFromString(std::string _input);
@@ -266,7 +313,6 @@ public:
 private:
 	ErrorId m_errorId;
 	Type m_type;
-	std::string m_typeName;
 };
 
 }

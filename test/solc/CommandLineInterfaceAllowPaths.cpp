@@ -100,7 +100,7 @@ ImportCheck checkImport(
 		return ImportCheck::OK();
 
 	static regex const sourceNotFoundErrorRegex{
-		R"(^Error \(6275\): Source "[^"]+" not found: (.*)\.\n)"
+		R"(^ParserError \(6275\): Source "[^"]+" not found: (.*)\.\n)"
 		R"(\s*--> .*<stdin>:\d+:\d+:\n)"
 		R"(\s*\|\n)"
 		R"(\d+\s*\| import '.+';\n)"
