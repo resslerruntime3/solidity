@@ -1,7 +1,7 @@
-from opcodes import AND, DIV, GT, SDIV, SGT, SLT
+from opcodes import AND, SDIV, MUL, EQ, ISZERO, NOT, OR, SGT, SLT, SUB
 from rule import Rule
-from util import BVSignedMax, BVSignedMin, BVSignedUpCast
-from z3 import BVMulNoOverflow, BVMulNoUnderflow, BitVec, Not, Or
+from util import BVSignedUpCast, BVSignedMin
+from z3 import BVMulNoOverflow, BVMulNoUnderflow, BitVec, BitVecVal, Not, Or, And
 
 """
 Overflow checked signed integer multiplication.
@@ -9,9 +9,8 @@ Overflow checked signed integer multiplication.
 
 # Approximation with 16-bit base types.
 n_bits = 16
-type_bits = 8
 
-while type_bits <= n_bits:
+for type_bits in [4, 8, 12]:
 
 	rule = Rule()
 
@@ -26,18 +25,34 @@ while type_bits <= n_bits:
 	# cast to full n_bits values
 	X = BVSignedUpCast(X_short, n_bits)
 	Y = BVSignedUpCast(Y_short, n_bits)
+	product = MUL(X, Y)
 
 	# Constants
-	maxValue = BVSignedMax(type_bits, n_bits)
-	minValue = BVSignedMin(type_bits, n_bits)
+	bit_mask = BitVecVal(2**type_bits - 1, n_bits)
+	sign_mask = BitVecVal(2**(type_bits-1), n_bits)
+	min_value = BVSignedMin(type_bits, n_bits)
 
 	# Overflow and underflow checks in YulUtilFunction::overflowCheckedIntMulFunction
-	overflow_check_1 = AND(AND(SGT(X, 0), SGT(Y, 0)), GT(X, DIV(maxValue, Y)))
-	underflow_check_1 = AND(AND(SGT(X, 0), SLT(Y, 0)), SLT(Y, SDIV(minValue, X)))
-	underflow_check_2 = AND(AND(SLT(X, 0), SGT(Y, 0)), SLT(X, SDIV(minValue, Y)))
-	overflow_check_2 = AND(AND(SLT(X, 0), SLT(Y, 0)), SLT(X, SDIV(maxValue, Y)))
+	if type_bits == n_bits:
+		sol_overflow_check_1 = AND(EQ(X, SUB(0, 1)), EQ(Y, min_value))
+		sol_overflow_check_2 = AND(ISZERO(ISZERO(X)), ISZERO(EQ(Y, SDIV(product, X))))
+	else:
+		sol_overflow_check_1 = AND(
+			ISZERO(AND(product, sign_mask)),
+			AND(ISZERO(ISZERO(X)), ISZERO(EQ(Y, SDIV(AND(product, bit_mask), X))))
+		)
+		sol_overflow_check_2 = AND(
+			ISZERO(ISZERO(AND(product, sign_mask))),
+			AND(ISZERO(ISZERO(X)), ISZERO(EQ(Y, SDIV(OR(product, NOT(bit_mask)), X))))
+		)
 
-	rule.check(actual_overflow, Or(overflow_check_1 != 0, overflow_check_2 != 0))
-	rule.check(actual_underflow, Or(underflow_check_1 != 0, underflow_check_2 != 0))
+	# product sign check needed because z3 distinguishes underflow from overflow
+	positive_product = OR(AND(SGT(X, 0), SGT(Y, 0)), AND(SLT(X, 0), SLT(Y, 0)))
+	negative_product = OR(AND(SGT(X, 0), SLT(Y, 0)), AND(SLT(X, 0), SGT(Y, 0)))
 
-	type_bits *= 2
+	# specific tests for underflow and overflow
+	formal_overflow_check =  And(positive_product != 0,	Or(sol_overflow_check_1 != 0, sol_overflow_check_2 != 0))
+	formal_underflow_check = And(negative_product != 0, Or(sol_overflow_check_1 != 0, sol_overflow_check_2 != 0))
+
+	rule.check(actual_overflow, formal_overflow_check)
+	rule.check(actual_underflow, formal_underflow_check)
