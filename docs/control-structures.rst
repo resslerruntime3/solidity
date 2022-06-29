@@ -145,6 +145,41 @@ throws an exception or goes out of gas.
     external functions happen after any changes to state variables in your contract
     so your contract is not vulnerable to a reentrancy exploit.
 
+.. warning::
+    The type of this.g takes a memory argument, even if the function signature uses calldata.
+    This is because for external function pointers, you are only interested in the calling side and not in the called side.
+    For the caller, it does not make sense to even distinguish
+    function (string calldata) external and function (string memory) external.
+
+    So, effectively, for external functions taking calldata arguments, the compiler treats them as if they had memory arguments instead.
+
+    You cannot assign them, pass into a function of use in abi.encodeCall() even when the target type exactly matches the
+    type of the function pointer.
+
+    For eg. All 3 lines of code in the following main() function will result in errors.
+
+    .. code-block:: solidity
+
+        // SPDX-License-Identifier: GPL-3.0
+        pragma solidity >=0.6.2 <0.9.0;
+
+        contract C {
+            function f(function (string calldata) external) external {}
+
+            function g(string calldata) external {}
+
+            function main() external {
+                function (string calldata) external ptr = this.g;
+                abi.encodeCall(this.f, (this.g));
+                this.f(this.g);
+            }
+
+        }
+
+    Here, we must observe that function (string calldata) external is a type that is not really useful.
+    There are discussions on possibly disallowing it in future.
+
+
 .. note::
     Before Solidity 0.6.2, the recommended way to specify the value and gas was to
     use ``f.value(x).gas(g)()``. This was deprecated in Solidity 0.6.2 and is no
