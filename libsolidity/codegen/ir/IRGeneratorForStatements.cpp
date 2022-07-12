@@ -674,20 +674,18 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 {
 	setLocation(_unaryOperation);
 
-	if (_unaryOperation.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = _unaryOperation.annotation().userDefinedFunction)
 	{
 		_unaryOperation.subExpression().accept(*this);
 		setLocation(_unaryOperation);
 
-		// TODO extract from function call
-		FunctionDefinition const& function = *_unaryOperation.annotation().userDefinedFunction;
 		solAssert(
-			dynamic_cast<SourceUnit const*>(function.scope()),
+			dynamic_cast<SourceUnit const*>(function->scope()),
 			"Only file-level functions and library functions can be bound to a user type operator."
 		);
 
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
-			function.libraryFunction() ? function.typeViaContractName() : function.type()
+			function->libraryFunction() ? function->typeViaContractName() : function->type()
 		);
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
@@ -695,10 +693,10 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 
 		string parameter = expressionAsType(_unaryOperation.subExpression(), *functionType->selfType());
 		solAssert(!parameter.empty());
-		solAssert(function.isImplemented(), "");
+		solAssert(function->isImplemented(), "");
 
 		define(_unaryOperation) <<
-			m_context.enqueueFunctionForCodeGeneration(function) <<
+			m_context.enqueueFunctionForCodeGeneration(*function) <<
 			("(" + parameter + ")\n");
 
 		return false;
@@ -807,22 +805,19 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 {
 	setLocation(_binOp);
 
-	// TODO: make this nicer
-	if (_binOp.annotation().userDefinedFunction)
+	if (FunctionDefinition const* function = _binOp.annotation().userDefinedFunction)
 	{
 		_binOp.leftExpression().accept(*this);
 		_binOp.rightExpression().accept(*this);
 		setLocation(_binOp);
 
-		// TODO extract from function call
-		FunctionDefinition const& function = *_binOp.annotation().userDefinedFunction;
 		solAssert(
-			dynamic_cast<SourceUnit const*>(function.scope()),
+			dynamic_cast<SourceUnit const*>(function->scope()),
 			"Only file-level functions and library functions can be bound to a user type operator."
 		);
 
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
-			function.libraryFunction() ? function.typeViaContractName() : function.type()
+			function->libraryFunction() ? function->typeViaContractName() : function->type()
 		);
 		solAssert(functionType);
 		functionType = dynamic_cast<FunctionType const&>(*functionType).asBoundFunction();
@@ -832,10 +827,10 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 		string right = expressionAsType(_binOp.rightExpression(), *functionType->parameterTypes().at(0));
 		solAssert(!left.empty() && !right.empty());
 
-		solAssert(function.isImplemented(), "");
+		solAssert(function->isImplemented(), "");
 
 		define(_binOp) <<
-			m_context.enqueueFunctionForCodeGeneration(function) <<
+			m_context.enqueueFunctionForCodeGeneration(*function) <<
 			("(" + left + ", " + right + ")\n");
 
 		return false;
