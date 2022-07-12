@@ -1783,18 +1783,18 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	_operation.annotation().isConstant = false;
 
 	// Check if the operator is built-in or user-defined.
-	FunctionDefinition const* userDefinedOperator = leftType->userDefinedOperator(
+	FunctionDefinitionResult userDefinedOperatorResult = leftType->userDefinedOperator(
 		_operation.getOperator(),
 		*currentDefinitionScope(),
 		false
 	);
-	_operation.annotation().userDefinedFunction = userDefinedOperator;
+	_operation.annotation().userDefinedFunction = userDefinedOperatorResult;
 	FunctionType const* userDefinedFunctionType = nullptr;
-	if (userDefinedOperator)
+	if (userDefinedOperatorResult)
 		userDefinedFunctionType = &dynamic_cast<FunctionType const&>(
-			userDefinedOperator->libraryFunction() ?
-			*userDefinedOperator->typeViaContractName() :
-			*userDefinedOperator->type()
+			userDefinedOperatorResult.get()->libraryFunction() ?
+			*userDefinedOperatorResult.get()->typeViaContractName() :
+			*userDefinedOperatorResult.get()->type()
 		);
 	_operation.annotation().isPure =
 		*_operation.leftExpression().annotation().isPure &&
@@ -1805,9 +1805,9 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	Type const* commonType = leftType;
 
 	// Either the operator is user-defined or built-in.
-	solAssert(!userDefinedOperator || !builtinResult);
+	solAssert(!userDefinedOperatorResult || !builtinResult);
 
-	if (!builtinResult && !userDefinedOperator)
+	if (!builtinResult && !userDefinedOperatorResult)
 		m_errorReporter.typeError(
 			2271_error,
 			_operation.location(),
@@ -1817,12 +1817,14 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			leftType->humanReadableName() +
 			" and " +
 			rightType->humanReadableName() +
-			(!builtinResult.message().empty() ? ". " + builtinResult.message() : "")
+			"." +
+			(!builtinResult.message().empty() ? " " + builtinResult.message() : "") +
+			(!userDefinedOperatorResult.message().empty() ? " " + userDefinedOperatorResult.message() : "")
 		);
 
 	if (builtinResult)
 		commonType = builtinResult.get();
-	else if (userDefinedOperator)
+	else if (userDefinedOperatorResult)
 	{
 		solAssert(
 			userDefinedFunctionType->parameterTypes().size() == 2 &&
@@ -1838,7 +1840,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		TypeProvider::boolean() :
 		commonType;
 
-	if (userDefinedOperator)
+	if (userDefinedOperatorResult)
 		solAssert(
 			userDefinedFunctionType->returnParameterTypes().size() == 1 &&
 			*userDefinedFunctionType->returnParameterTypes().front() == *_operation.annotation().type
