@@ -95,7 +95,7 @@ bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
 {
 	solAssert(!!m_currentNode, "");
 
-	ASTConstVisitor::visit(_operation);
+	bool result = ASTConstVisitor::visit(_operation);
 	if (_operation.annotation().userDefinedFunction)
 	{
 		solAssert(!m_currentNode->resolveFunctionCall(nullptr));
@@ -106,7 +106,7 @@ bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
 		connect(m_currentNode, nextNode);
 		m_currentNode = nextNode;
 	}
-	return false;
+	return result;
 }
 
 bool ControlFlowBuilder::visit(Conditional const& _conditional)
