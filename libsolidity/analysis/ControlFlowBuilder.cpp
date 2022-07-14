@@ -75,7 +75,7 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 		}
 		default:
 		{
-			bool result = ASTConstVisitor::visit(_operation);
+			visitNode(_operation);
 			if (_operation.annotation().userDefinedFunction)
 			{
 				solAssert(!m_currentNode->resolveFunctionCall(nullptr));
@@ -86,7 +86,7 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 				connect(m_currentNode, nextNode);
 				m_currentNode = nextNode;
 			}
-			return result;
+			return true;
 		}
 	}
 }
@@ -95,7 +95,7 @@ bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
 {
 	solAssert(!!m_currentNode, "");
 
-	bool result = ASTConstVisitor::visit(_operation);
+	visitNode(_operation);
 	if (_operation.annotation().userDefinedFunction)
 	{
 		solAssert(!m_currentNode->resolveFunctionCall(nullptr));
@@ -105,8 +105,10 @@ bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
 
 		connect(m_currentNode, nextNode);
 		m_currentNode = nextNode;
+		return true;
 	}
-	return result;
+
+	return false;
 }
 
 bool ControlFlowBuilder::visit(Conditional const& _conditional)
