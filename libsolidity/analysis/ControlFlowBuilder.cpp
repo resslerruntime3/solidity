@@ -57,6 +57,7 @@ unique_ptr<FunctionFlow> ControlFlowBuilder::createFunctionFlow(
 bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 {
 	solAssert(!!m_currentNode, "");
+	visitNode(_operation);
 
 	switch (_operation.getOperator())
 	{
@@ -64,7 +65,6 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 		case Token::And:
 		{
 			solAssert(!_operation.annotation().userDefinedFunction);
-			visitNode(_operation);
 			appendControlFlow(_operation.leftExpression());
 
 			auto nodes = splitFlow<2>();
@@ -75,7 +75,6 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 		}
 		default:
 		{
-			visitNode(_operation);
 			if (_operation.annotation().userDefinedFunction)
 			{
 				solAssert(!m_currentNode->resolveFunctionCall(nullptr));
