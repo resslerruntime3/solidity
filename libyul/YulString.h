@@ -140,9 +140,12 @@ public:
 	/// falls back to string comparison.
 	bool operator<(YulString const& _other) const
 	{
-		if (m_handle.hash < _other.m_handle.hash) return true;
-		if (_other.m_handle.hash < m_handle.hash) return false;
-		if (m_handle.id == _other.m_handle.id) return false;
+		if (m_handle.hash != _other.m_handle.hash)
+			return m_handle.hash < _other.m_handle.hash;
+
+		if (m_handle.id != _other.m_handle.id)
+			return m_handle.id < _other.m_handle.id;
+
 		return str() < _other.str();
 	}
 	/// Equality is determined based on the string ID.
