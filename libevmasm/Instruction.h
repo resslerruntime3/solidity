@@ -188,6 +188,15 @@ enum class Instruction: uint8_t
 	SELFDESTRUCT = 0xff	///< halt execution and register account for later deletion
 };
 
+/// @returns true if the instruction is of the CALL opcode family
+inline bool isCallInstruction(Instruction _inst)
+{
+	return Instruction::CALL == _inst ||
+		Instruction::CALLCODE == _inst ||
+		Instruction::DELEGATECALL == _inst ||
+		Instruction::STATICCALL == _inst;
+}
+
 /// @returns true if the instruction is a PUSH
 inline bool isPushInstruction(Instruction _inst)
 {

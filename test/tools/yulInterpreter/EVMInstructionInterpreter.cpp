@@ -70,6 +70,10 @@ u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 	}
 }
 
+}
+
+namespace solidity::yul::test
+{
 /// Copy @a _size bytes of @a _source at offset @a _sourceOffset to
 /// @a _target at offset @a _targetOffset. Behaves as if @a _source would
 /// continue with an infinite sequence of zero bytes beyond its end.
@@ -325,20 +329,22 @@ u256 EVMInstructionInterpreter::eval(
 		// TODO assign returndata
 		accessMemory(arg[3], arg[4]);
 		accessMemory(arg[5], arg[6]);
+		m_state.calldata = readMemory(arg[3], arg[4]);
 		logTrace(_instruction, arg);
 		return arg[0] & 1;
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
 		accessMemory(arg[2], arg[3]);
 		accessMemory(arg[4], arg[5]);
+		m_state.calldata = readMemory(arg[2], arg[3]);
 		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::RETURN:
 	{
-		bytes data;
+		m_state.returndata = {};
 		if (accessMemory(arg[0], arg[1]))
-			data = readMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg, data);
+			m_state.returndata = readMemory(arg[0], arg[1]);
+		logTrace(_instruction, arg, m_state.returndata);
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	case Instruction::REVERT:
@@ -474,6 +480,10 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 				size_t(_evaluatedArguments.at(2))
 			);
 		return 0;
+	}
+	else if (fun == "memoryguard")
+	{
+		return _evaluatedArguments.at(0);
 	}
 	else
 		yulAssert(false, "Unknown builtin: " + fun);
