@@ -323,6 +323,9 @@ Input Description
         },
         // Metadata settings (optional)
         "metadata": {
+          // The metadata is appended at the end of the bytecode by default.
+          // Setting this to false omits the metadata from the deployed code.
+          "append": true,
           // Use only literal content and not URLs (false by default)
           "useLiteralContent": true,
           // Use the given hash method for the metadata hash that is appended to the bytecode.
