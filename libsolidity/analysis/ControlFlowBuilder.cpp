@@ -61,8 +61,6 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 
 	switch (_operation.getOperator())
 	{
-		case Token::Conditional:
-			return true;
 		case Token::Or:
 		case Token::And:
 		{
@@ -87,10 +85,12 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 
 				connect(m_currentNode, nextNode);
 				m_currentNode = nextNode;
+				return false;
 			}
-			return false;
+
 		}
 	}
+	return ASTConstVisitor::visit(_operation);
 }
 
 bool ControlFlowBuilder::visit(UnaryOperation const& _operation)
