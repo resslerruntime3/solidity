@@ -413,7 +413,10 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 
 	if (FunctionDefinition const* function = _unaryOperation.annotation().userDefinedFunction)
 	{
-		solAssert(function->isFree(), "Only free functions can be bound to a user type operator.");
+		solAssert(
+			function->isFree() || function->libraryFunction(),
+			"Only file-level functions and library functions can be bound to a user type operator."
+		);
 
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
 			function->libraryFunction() ? function->typeViaContractName() : function->type()
