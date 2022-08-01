@@ -1,7 +1,7 @@
 ### 0.8.16 (unreleased)
 
 Language Features:
- * Allow user-defined operators via ``using {f as +} for Typename;``.
+ * Allow defining custom operators for user-defined value types and structs via ``using {f as +} for Typename;`` syntax.
 
 
 Compiler Features:
