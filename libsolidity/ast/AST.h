@@ -671,13 +671,13 @@ public:
 		bool _global
 	):
 		ASTNode(_id, _location),
-		m_functions(std::move(_functions)),
+		m_functionsOrLibrary(std::move(_functions)),
 		m_operators(std::move(_operators)),
 		m_usesBraces(_usesBraces),
 		m_typeName(std::move(_typeName)),
 		m_global{_global}
 	{
-		solAssert(m_functions.size() == m_operators.size());
+		solAssert(m_functionsOrLibrary.size() == m_operators.size());
 	}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -687,15 +687,15 @@ public:
 	TypeName const* typeName() const { return m_typeName.get(); }
 
 	/// @returns a list of functions or the single library.
-	std::vector<ASTPointer<IdentifierPath>> const& functionsOrLibrary() const { return m_functions; }
-	auto functionsAndOperators() const { return ranges::zip_view(m_functions, m_operators); }
+	std::vector<ASTPointer<IdentifierPath>> const& functionsOrLibrary() const { return m_functionsOrLibrary; }
+	auto functionsAndOperators() const { return ranges::zip_view(m_functionsOrLibrary, m_operators); }
 	bool usesBraces() const { return m_usesBraces; }
 	bool global() const { return m_global; }
 
 private:
 	/// Either the single library or a list of functions.
-	std::vector<ASTPointer<IdentifierPath>> m_functions;
-	/// Operators, the functions are applied to.
+	std::vector<ASTPointer<IdentifierPath>> m_functionsOrLibrary;
+	/// Operators, the functions from @a m_functionsOrLibrary implement.
 	std::vector<std::optional<Token>> m_operators;
 	bool m_usesBraces;
 	ASTPointer<TypeName> m_typeName;
