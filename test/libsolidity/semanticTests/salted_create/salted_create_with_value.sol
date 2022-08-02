@@ -21,6 +21,6 @@ contract A {
 // EVMVersion: >=constantinople
 // ----
 // f(), 10 ether -> 3007, 3008, 3009
-// gas irOptimized: 256606
-// gas legacy: 403861
-// gas legacyOptimized: 285111
+// gas irOptimized: 255997
+// gas legacy: 386497
+// gas legacyOptimized: 283266

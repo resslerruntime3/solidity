@@ -682,35 +682,25 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> product {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
-				product := mul(x, y)
+				product := <cleanupFunction>(mul(x, y))
 				<?signed>
-					<?256bit>
-						// special case
-						if and(eq(x, sub(0, 1)), eq(y, <minValue>)) { <panic>() }
-						if and(
-							iszero(iszero(x)),
-							iszero(eq(y, sdiv(product, x)))
-						) { <panic>() }
-					<!256bit>
-						// overflow if product has positive sign and y != (p & bitMask) / x
-						// 			OR product has negative sign and y != (p | !bitMask) / x
-						if and(
-							iszero(iszero(x)),
-							or(
-								and(
-									iszero(and(product, <signMask>)),
-									iszero(eq(y, sdiv(and(product, <bitMask>),x)))
-								),
-								and(
-									eq(and(product, <signMask>), <signMask>),
-									iszero(eq(y, sdiv(or(product, not(<bitMask>)),x)))
-								)
-							)
-						) { <panic>() }
-					</256bit>
+					// special case
+					if and(eq(x, sub(0, 1)), eq(y, <minValue>)) { <panic>() }
+					// overflow, if x != 0 and y != product/x
+					if iszero(
+						or(
+							iszero(x),
+							eq(y, sdiv(product, x))
+						)
+					) { <panic>() }
 				<!signed>
 					// overflow, if x != 0 and y != product/x
-					if and(iszero(iszero(x)), iszero(eq(y, div(and(product, <bitMask>), x)))) { <panic>() }
+					if iszero(
+						or(
+							iszero(x),
+							eq(y, div(product, x))
+						)
+					) { <panic>() }
 				</signed>
 			}
 			)")
@@ -718,10 +708,10 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("cleanupFunction", cleanupFunction(_type))
 			("panic", panicFunction(PanicCode::UnderOverflow))
-			("bitMask", toCompactHexWithPrefix((u256(1) << _type.numBits()) - 1))
-			("signMask", toCompactHexWithPrefix(u256(1) << _type.numBits() - 1))
+			//("bitMask", toCompactHexWithPrefix((u256(1) << _type.numBits()) - 1))
+			//("signMask", toCompactHexWithPrefix(u256(1) << _type.numBits() - 1))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
-			("256bit", _type.numBits() == 256)
+			//("256bit", _type.numBits() == 256)
 			.render();
 	});
 }
