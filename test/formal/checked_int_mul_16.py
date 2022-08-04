@@ -1,6 +1,6 @@
 from opcodes import AND, SDIV, MUL, EQ, ISZERO, NOT, OR, SGT, SLT, SUB
 from rule import Rule
-from util import BVSignedUpCast, BVSignedMin
+from util import BVSignedUpCast, BVSignedMin, BVSignedCleanupFunction
 from z3 import BVMulNoOverflow, BVMulNoUnderflow, BitVec, BitVecVal, Not, Or, And
 
 """
@@ -8,7 +8,7 @@ Overflow checked signed integer multiplication.
 """
 
 # Approximation with 16-bit base types.
-n_bits = 16
+n_bits = 12
 
 for type_bits in [4, 8, 12]:
 
@@ -25,26 +25,16 @@ for type_bits in [4, 8, 12]:
 	# cast to full n_bits values
 	X = BVSignedUpCast(X_short, n_bits)
 	Y = BVSignedUpCast(Y_short, n_bits)
-	product = MUL(X, Y)
+	product_raw = MUL(X, Y)
+	#remove any overflown bits
+	product = BVSignedCleanupFunction(product_raw, type_bits)
 
 	# Constants
-	bit_mask = BitVecVal(2**type_bits - 1, n_bits)
-	sign_mask = BitVecVal(2**(type_bits-1), n_bits)
 	min_value = BVSignedMin(type_bits, n_bits)
 
 	# Overflow and underflow checks in YulUtilFunction::overflowCheckedIntMulFunction
-	if type_bits == n_bits:
-		sol_overflow_check_1 = AND(EQ(X, SUB(0, 1)), EQ(Y, min_value))
-		sol_overflow_check_2 = AND(ISZERO(ISZERO(X)), ISZERO(EQ(Y, SDIV(product, X))))
-	else:
-		sol_overflow_check_1 = AND(
-			ISZERO(AND(product, sign_mask)),
-			AND(ISZERO(ISZERO(X)), ISZERO(EQ(Y, SDIV(AND(product, bit_mask), X))))
-		)
-		sol_overflow_check_2 = AND(
-			ISZERO(ISZERO(AND(product, sign_mask))),
-			AND(ISZERO(ISZERO(X)), ISZERO(EQ(Y, SDIV(OR(product, NOT(bit_mask)), X))))
-		)
+	sol_overflow_check_1 = AND(EQ(X, SUB(0, 1)), EQ(Y, min_value))
+	sol_overflow_check_2 = ISZERO(OR(ISZERO(X), EQ(Y, SDIV(product, X))))
 
 	# product sign check needed because z3 distinguishes underflow from overflow
 	positive_product = OR(AND(SGT(X, 0), SGT(Y, 0)), AND(SLT(X, 0), SLT(Y, 0)))

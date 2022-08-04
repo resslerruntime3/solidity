@@ -708,10 +708,7 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("cleanupFunction", cleanupFunction(_type))
 			("panic", panicFunction(PanicCode::UnderOverflow))
-			//("bitMask", toCompactHexWithPrefix((u256(1) << _type.numBits()) - 1))
-			//("signMask", toCompactHexWithPrefix(u256(1) << _type.numBits() - 1))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
-			//("256bit", _type.numBits() == 256)
 			.render();
 	});
 }

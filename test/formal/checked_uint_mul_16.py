@@ -1,6 +1,6 @@
 from opcodes import AND, ISZERO, DIV, MUL, EQ
 from rule import Rule
-from util import BVUnsignedUpCast
+from util import BVUnsignedUpCast, BVUnsignedCleanupFunction
 from z3 import BitVec, BitVecVal, Not, BVMulNoOverflow
 
 """
@@ -24,12 +24,11 @@ for type_bits in [4, 8, 12]:
 	# cast to full n_bits values
 	X = BVUnsignedUpCast(X_short, n_bits)
 	Y = BVUnsignedUpCast(Y_short, n_bits)
-	product = MUL(X, Y)
-
-	# Constants
-	bitMask =  BVUnsignedUpCast(BitVecVal((1 << type_bits) - 1, n_bits), n_bits)
+	product_raw = MUL(X, Y)
+	#remove any overflown bits
+	product = BVUnsignedCleanupFunction(product_raw, type_bits)
 
 	# Overflow check in YulUtilFunction::overflowCheckedIntMulFunctions
-	overflow_check = AND(ISZERO(ISZERO(X)), ISZERO(EQ(Y, DIV(AND(product, bitMask), X))))
+	overflow_check = AND(ISZERO(ISZERO(X)), ISZERO(EQ(Y, DIV(product, X))))
 
 	rule.check(overflow_check != 0, actual_overflow)
