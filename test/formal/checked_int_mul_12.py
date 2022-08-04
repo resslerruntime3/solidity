@@ -1,7 +1,7 @@
-from opcodes import AND, SDIV, MUL, EQ, ISZERO, NOT, OR, SGT, SLT, SUB
+from opcodes import AND, SDIV, MUL, EQ, ISZERO, OR, SGT, SLT, SUB
 from rule import Rule
 from util import BVSignedUpCast, BVSignedMin, BVSignedCleanupFunction
-from z3 import BVMulNoOverflow, BVMulNoUnderflow, BitVec, BitVecVal, Not, Or, And
+from z3 import BVMulNoOverflow, BVMulNoUnderflow, BitVec, Not, Or, And
 
 """
 Overflow checked signed integer multiplication.

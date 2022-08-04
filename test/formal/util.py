@@ -1,5 +1,4 @@
 from z3 import BitVecVal, Concat, If
-from opcodes import SIGNEXTEND
 
 def BVUnsignedUpCast(x, n_bits):
 	assert x.size() <= n_bits
