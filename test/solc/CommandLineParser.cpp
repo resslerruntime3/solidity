@@ -226,11 +226,11 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 
 BOOST_AUTO_TEST_CASE(no_append_metadata)
 {
-	CommandLineOptions expectedOptions;
-	expectedOptions.metadata.format = CompilerStack::MetadataFormat::NoMetadata;
-	vector<string> commandLine = {"--no-append-metadata"};
+	vector<string> commandLine = {"solc", "--no-append-metadata", "contract.sol"};
 	CommandLineOptions parsedOptions = parseCommandLine(commandLine);
-	BOOST_TEST(parsedOptions == expectedOptions);
+	bool assert = parsedOptions.metadata.format == CompilerStack::MetadataFormat::NoMetadata;
+
+	BOOST_TEST(assert);
 }
 
 BOOST_AUTO_TEST_CASE(via_ir_options)
